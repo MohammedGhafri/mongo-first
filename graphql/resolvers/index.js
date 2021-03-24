@@ -34,27 +34,45 @@ const events = async eventIds =>{
     }catch(err){
         throw err
     }
-}
+};
 
-const user = userId =>{
-    return User.findById(userId)
-    .then(user =>{
+// const user = userId =>{
+//     return User.findById(userId)
+//     .then(user =>{
+//         return {...user._doc,
+//             _id:user.id,
+//             createdEvents:events.bind(this,user._doc.createdEvents)
+//         }
+//     })
+//     .catch(err=>{
+//         throw err;
+//     })
+// }
+
+
+const user = async userId =>{
+    try {
+    const user = await User.findById(userId)
+    
         return {...user._doc,
             _id:user.id,
             createdEvents:events.bind(this,user._doc.createdEvents)
         }
-    })
-    .catch(err=>{
+    }catch(err){
+
         throw err;
-    })
-}
+    }
+    
+    
+};
 
 
 module.exports = {
-    events: () => {
+    events: async() => {
         // return events;
-        return Event.find()
-        .then(events =>{
+        try{
+        const events = await Event.find()
+        
             return events.map(event => {
                 return {
                     ...event._doc,
@@ -64,12 +82,12 @@ module.exports = {
             };
                 return event
             });
-        })
-        .catch(err =>{
-            throw err;
-        });
+        }catch(err){
+                throw err;
+            }
+       
     },
-    createEvent: (args) => {
+    createEvent: async (args) => {
         // const event = {
         //     _id: Math.random().toString(),
         //     title: args.eventInput.title,
@@ -89,7 +107,8 @@ module.exports = {
         })
         // events.push(event)
         let createdEvent;
-        return event.save().then(result =>{
+        try{
+        const result = await event.save()
             // console.log(result);
             createdEvent = {
                 ...result._doc,
@@ -97,44 +116,134 @@ module.exports = {
                 creator:user.bind(this,result._doc.creator),
             
             }
-            return User.findById('605b0532814b257cfdee190f')
-            return {...result._doc}; // instead of final return below.
-        })
-        .then(user =>{
-            if(!user){
+            const creatorUser = await User.findById('605b0532814b257cfdee190f')
+            // return {...result._doc}; // instead of final return below.
+        
+            if(!creatorUser){
                 throw new Error('User Does not Exist')
             }
-            user.createdEvents.push(event);
-            return user.save();
-        })
-        .then(result =>{
+            creatorUser.createdEvents.push(event);
+            await creatorUser.save();
             return createdEvent;
-        })
-        .catch(err =>{
-            console.log(err);
+        }catch(err){
             throw err
-        });
+        }
+      
         // return event;
     },
-    createUser: args =>{
-        return User.findOne({email: args.userInput.email}).then(user =>{
-            if(user){
+    createUser: async args =>{
+            try{
+        const existing_user = await User.findOne({email: args.userInput.email})
+            if(existing_user){
                 throw new Error('User with a same email is Already Exist.')
             }
-            return bcrypt.hash(args.userInput.password,12).then(hPassword =>{
+            const hPassword = await bcrypt.hash(args.userInput.password,12)
                 const user = new User ({
                     email : args.userInput.email,
                     password : hPassword
                 })
-                return user.save();
-                })
-                .then(res =>{
-                    return {...res._doc, password: null, _id:res.id}
+                const result = await user.save();
+                    return {...result._doc, password: null, _id:result.id}
                     // return res,{...res._doc}
-                })
-                .catch(err=>{
+            }catch(err){
                 throw err
-            });
-        })
+
+            }
+                
     }
 }
+
+
+
+
+
+
+
+// module.exports = {
+//     events: () => {
+//         // return events;
+//         return Event.find()
+//         .then(events =>{
+//             return events.map(event => {
+//                 return {
+//                     ...event._doc,
+//                     _id:event.id,
+//                     date: new Date(event._doc.date).toISOString(),
+//                     creator:user.bind(this,event._doc.creator)
+//             };
+//                 return event
+//             });
+//         })
+//         .catch(err =>{
+//             throw err;
+//         });
+//     },
+//     createEvent: (args) => {
+//         // const event = {
+//         //     _id: Math.random().toString(),
+//         //     title: args.eventInput.title,
+//         // description: args.eventInput.description,
+//         // price: +args.eventInput.price,
+//         // // date: args.eventInput.date
+//         // date: new Date().toISOString()
+//         // };
+//         // console.log(args)
+//         const event = new Event({
+//                  title: args.eventInput.title,
+//         description: args.eventInput.description,
+//         price: +args.eventInput.price,
+        
+//         date: new Date(args.eventInput.date),
+//         creator:'605b0532814b257cfdee190f'
+//         })
+//         // events.push(event)
+//         let createdEvent;
+//         return event.save().then(result =>{
+//             // console.log(result);
+//             createdEvent = {
+//                 ...result._doc,
+//                 date: new Date(event._doc.date).toISOString(),
+//                 creator:user.bind(this,result._doc.creator),
+            
+//             }
+//             return User.findById('605b0532814b257cfdee190f')
+//             return {...result._doc}; // instead of final return below.
+//         })
+//         .then(user =>{
+//             if(!user){
+//                 throw new Error('User Does not Exist')
+//             }
+//             user.createdEvents.push(event);
+//             return user.save();
+//         })
+//         .then(result =>{
+//             return createdEvent;
+//         })
+//         .catch(err =>{
+//             console.log(err);
+//             throw err
+//         });
+//         // return event;
+//     },
+//     createUser: args =>{
+//         return User.findOne({email: args.userInput.email}).then(user =>{
+//             if(user){
+//                 throw new Error('User with a same email is Already Exist.')
+//             }
+//             return bcrypt.hash(args.userInput.password,12).then(hPassword =>{
+//                 const user = new User ({
+//                     email : args.userInput.email,
+//                     password : hPassword
+//                 })
+//                 return user.save();
+//                 })
+//                 .then(res =>{
+//                     return {...res._doc, password: null, _id:res.id}
+//                     // return res,{...res._doc}
+//                 })
+//                 .catch(err=>{
+//                 throw err
+//             });
+//         })
+//     }
+// }
