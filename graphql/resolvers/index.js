@@ -101,16 +101,16 @@ module.exports = {
             }
        
     },
-    bookings: async ()=>{
+    booking: async ()=>{
         try{
             const bookings = await Booking.find();
             return bookings.map(booking => {
                 return{
                     ...booking._doc,
                     user: user.bind(this,booking._doc.user),
-                    singleEvent:singleEvent.bind(this,booking_doc.event),
-                    createdAt: new Date(...booking._doc.createdAt).toISOString(),
-                    updatedAt: new Date(...booking._doc.updatedAt).toISOString(),
+                    singleEvent:singleEvent.bind(this,booking._doc.event),
+                    createdAt: new Date(booking._doc.createdAt).toISOString(),
+                    updatedAt: new Date(booking._doc.updatedAt).toISOString(),
                 }
             })
         }catch(err){
